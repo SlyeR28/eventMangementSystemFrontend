@@ -3,6 +3,7 @@ import { format } from 'date-fns';
 import { Package, Calendar } from 'lucide-react';
 import useAuthStore from '../../store/authStore';
 import orderService from '../../services/orderService';
+import { NoOrders } from '../../components/EmptyStates';
 
 export default function MyOrders() {
     const { user } = useAuthStore();
@@ -52,10 +53,7 @@ export default function MyOrders() {
                 <h1 className="text-4xl font-bold text-gray-900 mb-8">My Orders</h1>
 
                 {orders.length === 0 ? (
-                    <div className="card text-center py-12">
-                        <Package className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-                        <p className="text-xl text-gray-600">No orders yet</p>
-                    </div>
+                    <NoOrders />
                 ) : (
                     <div className="space-y-6">
                         {orders.map((order) => (

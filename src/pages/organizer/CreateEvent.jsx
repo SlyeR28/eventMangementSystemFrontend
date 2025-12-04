@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
-import { ArrowLeft, Plus, X } from 'lucide-react';
+import { ArrowLeft, Plus, X, Upload } from 'lucide-react';
 import useAuthStore from '../../store/authStore';
 import eventService from '../../services/eventService';
 
@@ -10,7 +10,9 @@ export default function CreateEvent() {
     const { user } = useAuthStore();
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
+
     const [tickets, setTickets] = useState([]);
+    const [imageFiles, setImageFiles] = useState([]);
 
     const {
         register,
@@ -53,7 +55,13 @@ export default function CreateEvent() {
                 }))
             };
 
-            await eventService.createEvent(eventData);
+            const createdEvent = await eventService.createEvent(eventData);
+
+            // Upload images if any (createdEvent might be the ID or an object with id/eventId)
+            const eventId = createdEvent.id || createdEvent.eventId || createdEvent;
+            if (imageFiles.length > 0 && eventId) {
+                await eventService.uploadEventImage(eventId, imageFiles);
+            }
 
             // Navigate to organizer dashboard
             navigate('/organizer/dashboard');

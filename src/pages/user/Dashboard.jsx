@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Ticket, Calendar, ShoppingBag, User } from 'lucide-react';
+import { DashboardStatSkeleton } from '../../components/LoadingSkeletons';
 import useAuthStore from '../../store/authStore';
 import ticketService from '../../services/ticketService';
 import orderService from '../../services/orderService';
@@ -55,47 +56,57 @@ export default function UserDashboard() {
 
                 {/* Stats */}
                 <div className="grid md:grid-cols-3 gap-6 mb-12">
-                    <div className="card">
-                        <div className="flex items-center justify-between">
-                            <div>
-                                <p className="text-gray-600 text-sm">Total Tickets</p>
-                                <p className="text-3xl font-bold text-gray-900 mt-1">
-                                    {loading ? '...' : stats.totalTickets}
-                                </p>
+                    {loading ? (
+                        <>
+                            <DashboardStatSkeleton />
+                            <DashboardStatSkeleton />
+                            <DashboardStatSkeleton />
+                        </>
+                    ) : (
+                        <>
+                            <div className="card">
+                                <div className="flex items-center justify-between">
+                                    <div>
+                                        <p className="text-gray-600 text-sm">Total Tickets</p>
+                                        <p className="text-3xl font-bold text-gray-900 mt-1">
+                                            {stats.totalTickets}
+                                        </p>
+                                    </div>
+                                    <div className="w-12 h-12 bg-primary-100 rounded-full flex items-center justify-center">
+                                        <Ticket className="w-6 h-6 text-primary-600" />
+                                    </div>
+                                </div>
                             </div>
-                            <div className="w-12 h-12 bg-primary-100 rounded-full flex items-center justify-center">
-                                <Ticket className="w-6 h-6 text-primary-600" />
-                            </div>
-                        </div>
-                    </div>
 
-                    <div className="card">
-                        <div className="flex items-center justify-between">
-                            <div>
-                                <p className="text-gray-600 text-sm">Upcoming Events</p>
-                                <p className="text-3xl font-bold text-gray-900 mt-1">
-                                    {loading ? '...' : stats.upcomingEvents}
-                                </p>
+                            <div className="card">
+                                <div className="flex items-center justify-between">
+                                    <div>
+                                        <p className="text-gray-600 text-sm">Upcoming Events</p>
+                                        <p className="text-3xl font-bold text-gray-900 mt-1">
+                                            {stats.upcomingEvents}
+                                        </p>
+                                    </div>
+                                    <div className="w-12 h-12 bg-secondary-100 rounded-full flex items-center justify-center">
+                                        <Calendar className="w-6 h-6 text-secondary-600" />
+                                    </div>
+                                </div>
                             </div>
-                            <div className="w-12 h-12 bg-secondary-100 rounded-full flex items-center justify-center">
-                                <Calendar className="w-6 h-6 text-secondary-600" />
-                            </div>
-                        </div>
-                    </div>
 
-                    <div className="card">
-                        <div className="flex items-center justify-between">
-                            <div>
-                                <p className="text-gray-600 text-sm">Total Orders</p>
-                                <p className="text-3xl font-bold text-gray-900 mt-1">
-                                    {loading ? '...' : stats.totalOrders}
-                                </p>
+                            <div className="card">
+                                <div className="flex items-center justify-between">
+                                    <div>
+                                        <p className="text-gray-600 text-sm">Total Orders</p>
+                                        <p className="text-3xl font-bold text-gray-900 mt-1">
+                                            {stats.totalOrders}
+                                        </p>
+                                    </div>
+                                    <div className="w-12 h-12 bg-primary-100 rounded-full flex items-center justify-center">
+                                        <ShoppingBag className="w-6 h-6 text-primary-600" />
+                                    </div>
+                                </div>
                             </div>
-                            <div className="w-12 h-12 bg-primary-100 rounded-full flex items-center justify-center">
-                                <ShoppingBag className="w-6 h-6 text-primary-600" />
-                            </div>
-                        </div>
-                    </div>
+                        </>
+                    )}
                 </div>
 
                 {/* Quick Actions */}

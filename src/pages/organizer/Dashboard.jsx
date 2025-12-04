@@ -4,6 +4,8 @@ import { Calendar, Plus, Edit, Trash2, Eye } from 'lucide-react';
 import { format } from 'date-fns';
 import useAuthStore from '../../store/authStore';
 import eventService from '../../services/eventService';
+import { NoEventsOrganizer } from '../../components/EmptyStates';
+import ConfirmModal from '../../components/ConfirmModal';
 
 export default function OrganizerDashboard() {
     const { user } = useAuthStore();
@@ -14,6 +16,8 @@ export default function OrganizerDashboard() {
         publishedEvents: 0,
         draftEvents: 0,
     });
+    const [showDeleteModal, setShowDeleteModal] = useState(false);
+    const [eventToDelete, setEventToDelete] = useState(null);
 
     useEffect(() => {
         const fetchOrganizerEvents = async () => {
@@ -38,11 +42,23 @@ export default function OrganizerDashboard() {
     }, [user.userId]);
 
     const handleDelete = async (eventId) => {
-        if (!window.confirm('Are you sure you want to delete this event?')) return;
+        setEventToDelete(eventId);
+        setShowDeleteModal(true);
+    };
+
+    const confirmDelete = async () => {
+        if (!eventToDelete) return;
 
         try {
-            await eventService.deleteEvent(eventId);
-            fetchOrganizerEvents();
+            await eventService.deleteEvent(eventToDelete);
+            const data = await eventService.getEventsByOrganizer(user.userId);
+            setEvents(data || []);
+            setStats({
+                totalEvents: data.length,
+                publishedEvents: data.filter(e => e.status === 'PUBLISHED' || e.status === 'ONGOING').length,
+                draftEvents: data.filter(e => e.status === 'DRAFT').length,
+            });
+            setEventToDelete(null);
         } catch (err) {
             console.error('Failed to delete event:', err);
             alert('Failed to delete event');
@@ -52,7 +68,13 @@ export default function OrganizerDashboard() {
     const handlePublish = async (eventId) => {
         try {
             await eventService.publishEvent(eventId);
-            fetchOrganizerEvents();
+            const data = await eventService.getEventsByOrganizer(user.userId);
+            setEvents(data || []);
+            setStats({
+                totalEvents: data.length,
+                publishedEvents: data.filter(e => e.status === 'PUBLISHED' || e.status === 'ONGOING').length,
+                draftEvents: data.filter(e => e.status === 'DRAFT').length,
+            });
         } catch (err) {
             console.error('Failed to publish event:', err);
             alert('Failed to publish event');
@@ -136,13 +158,7 @@ export default function OrganizerDashboard() {
                             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
                         </div>
                     ) : events.length === 0 ? (
-                        <div className="text-center py-12">
-                            <Calendar className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-                            <p className="text-xl text-gray-600 mb-4">No events yet</p>
-                            <Link to="/organizer/create-event" className="btn btn-primary">
-                                Create Your First Event
-                            </Link>
-                        </div>
+                        <NoEventsOrganizer />
                     ) : (
                         <div className="space-y-4">
                             {events.map((event) => (
@@ -204,6 +220,20 @@ export default function OrganizerDashboard() {
                         </div>
                     )}
                 </div>
+
+                <ConfirmModal
+                    isOpen={showDeleteModal}
+                    onClose={() => {
+                        setShowDeleteModal(false);
+                        setEventToDelete(null);
+                    }}
+                    onConfirm={confirmDelete}
+                    title="Delete Event"
+                    message="Are you sure you want to delete this event? This action cannot be undone."
+                    confirmText="Delete"
+                    cancelText="Cancel"
+                    type="danger"
+                />
             </div>
         </div>
     );

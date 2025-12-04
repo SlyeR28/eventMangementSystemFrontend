@@ -22,9 +22,20 @@ export default function Login() {
 
         try {
             const response = await authService.login(data.email, data.password);
-            setAuth(response.user, response.token);
+            console.log('Login response:', response);
+
+            // Backend returns {email, token, userId} not {user, token}
+            // Construct user object from response
+            const user = {
+                userId: response.userId,
+                email: response.email,
+                name: response.name || response.email.split('@')[0], // Use email prefix if name not provided
+            };
+
+            setAuth(user, response.token);
             navigate('/');
         } catch (err) {
+            console.error('Login error:', err);
             setError(err.response?.data?.message || 'Login failed. Please try again.');
         } finally {
             setLoading(false);

@@ -1,7 +1,9 @@
 import { useState, useEffect } from 'react';
 import { Search, Filter, X } from 'lucide-react';
 import EventCard from '../components/EventCard';
+import { EventCardSkeleton } from '../components/LoadingSkeletons';
 import eventService from '../services/eventService';
+import { NoEventsFound } from '../components/EmptyStates';
 
 export default function Events() {
     const [events, setEvents] = useState([]);
@@ -209,13 +211,13 @@ export default function Events() {
                 )}
 
                 {loading ? (
-                    <div className="flex justify-center items-center py-20">
-                        <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-primary-600"></div>
+                    <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+                        {Array.from({ length: 6 }).map((_, index) => (
+                            <EventCardSkeleton key={index} />
+                        ))}
                     </div>
                 ) : events.length === 0 ? (
-                    <div className="text-center py-20">
-                        <p className="text-xl text-gray-600">No events found. Try adjusting your filters.</p>
-                    </div>
+                    <NoEventsFound />
                 ) : (
                     <>
                         <div className="mb-6 text-gray-600">

@@ -4,6 +4,7 @@ import { Calendar, MapPin, Download } from 'lucide-react';
 import { format } from 'date-fns';
 import useAuthStore from '../../store/authStore';
 import ticketService from '../../services/ticketService';
+import { NoTickets } from '../../components/EmptyStates';
 
 export default function MyTickets() {
     const { user } = useAuthStore();
@@ -73,9 +74,7 @@ export default function MyTickets() {
                 </div>
 
                 {filteredTickets.length === 0 ? (
-                    <div className="card text-center py-12">
-                        <p className="text-xl text-gray-600">No tickets found</p>
-                    </div>
+                    <NoTickets />
                 ) : (
                     <div className="space-y-6">
                         {filteredTickets.map((ticket) => (

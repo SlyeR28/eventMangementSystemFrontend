@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Calendar, MapPin, Tag, Clock, Minus, Plus } from 'lucide-react';
 import { format } from 'date-fns';
+import { EventDetailSkeleton } from '../components/LoadingSkeletons';
 import eventService from '../services/eventService';
 import useAuthStore from '../store/authStore';
 import useCartStore from '../store/cartStore';
@@ -94,11 +95,7 @@ export default function EventDetails() {
     };
 
     if (loading) {
-        return (
-            <div className="min-h-screen flex justify-center items-center">
-                <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-primary-600"></div>
-            </div>
-        );
+        return <EventDetailSkeleton />;
     }
 
     if (error || !event) {
@@ -119,24 +116,32 @@ export default function EventDetails() {
                     <div className="lg:col-span-2 space-y-6">
                         {/* Image Gallery */}
                         <div className="card">
-                            {event.imageInfos && event.imageInfos.length > 0 ? (
+                            {event.imageInfos && event.imageInfos.length > 0 && event.imageInfos[currentImageIndex]?.securedUrl ? (
                                 <div className="space-y-4">
                                     <img
                                         src={event.imageInfos[currentImageIndex].securedUrl}
                                         alt={event.name}
                                         className="w-full h-96 object-cover rounded-lg"
+                                        onError={(e) => {
+                                            e.target.style.display = 'none';
+                                        }}
                                     />
                                     {event.imageInfos.length > 1 && (
                                         <div className="flex gap-2 overflow-x-auto">
                                             {event.imageInfos.map((img, index) => (
-                                                <img
-                                                    key={index}
-                                                    src={img.securedUrl}
-                                                    alt={`${event.name} ${index + 1}`}
-                                                    onClick={() => setCurrentImageIndex(index)}
-                                                    className={`w-20 h-20 object-cover rounded-lg cursor-pointer ${index === currentImageIndex ? 'ring-2 ring-primary-600' : 'opacity-60'
-                                                        }`}
-                                                />
+                                                img?.securedUrl && (
+                                                    <img
+                                                        key={index}
+                                                        src={img.securedUrl}
+                                                        alt={`${event.name} ${index + 1}`}
+                                                        onClick={() => setCurrentImageIndex(index)}
+                                                        className={`w-20 h-20 object-cover rounded-lg cursor-pointer ${index === currentImageIndex ? 'ring-2 ring-primary-600' : 'opacity-60'
+                                                            }`}
+                                                        onError={(e) => {
+                                                            e.target.style.display = 'none';
+                                                        }}
+                                                    />
+                                                )
                                             ))}
                                         </div>
                                     )}

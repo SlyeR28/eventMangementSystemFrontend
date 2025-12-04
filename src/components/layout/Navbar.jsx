@@ -3,11 +3,23 @@ import { ShoppingCart, User, Menu, X } from 'lucide-react';
 import { useState } from 'react';
 import useAuthStore from '../../store/authStore';
 import useCartStore from '../../store/cartStore';
+import ConfirmModal from '../ConfirmModal';
 
 export default function Navbar() {
     const { isAuthenticated, user, logout } = useAuthStore();
     const totalItems = useCartStore((state) => state.totalItems);
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+    const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+
+    const handleLogoutClick = () => {
+        setShowLogoutConfirm(true);
+        setMobileMenuOpen(false); // Close mobile menu if open
+    };
+
+    const handleLogoutConfirm = () => {
+        logout();
+        setShowLogoutConfirm(false);
+    };
 
     return (
         <nav className="bg-white shadow-sm sticky top-0 z-50">
@@ -56,7 +68,7 @@ export default function Navbar() {
                                             Profile
                                         </Link>
                                         <button
-                                            onClick={logout}
+                                            onClick={handleLogoutClick}
                                             className="w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-100"
                                         >
                                             Logout
@@ -106,7 +118,7 @@ export default function Navbar() {
                                     Profile
                                 </Link>
                                 <button
-                                    onClick={logout}
+                                    onClick={handleLogoutClick}
                                     className="block w-full text-left py-2 text-gray-700 hover:text-primary-600"
                                 >
                                     Logout
@@ -124,7 +136,19 @@ export default function Navbar() {
                         )}
                     </div>
                 )}
+
             </div>
+
+            <ConfirmModal
+                isOpen={showLogoutConfirm}
+                onClose={() => setShowLogoutConfirm(false)}
+                onConfirm={handleLogoutConfirm}
+                title="Logout"
+                message="Are you sure you want to logout?"
+                confirmText="Logout"
+                cancelText="Cancel"
+                type="danger"
+            />
         </nav>
     );
 }

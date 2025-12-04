@@ -1,9 +1,10 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { User, Mail, Phone, Lock, Camera } from 'lucide-react';
+import { User, Mail, Lock, Camera } from 'lucide-react';
 import useAuthStore from '../../store/authStore';
 import useToastStore from '../../store/toastStore';
 import authService from '../../services/authService';
+import userImageService from '../../services/userImageService';
 
 export default function Profile() {
     const { user, updateUser } = useAuthStore();
@@ -17,7 +18,6 @@ export default function Profile() {
     const [formData, setFormData] = useState({
         name: user?.name || '',
         email: user?.email || '',
-        mobile: user?.mobile || '',
     });
 
     const [passwordData, setPasswordData] = useState({
@@ -25,6 +25,66 @@ export default function Profile() {
         newPassword: '',
         confirmPassword: '',
     });
+
+    const [userImage, setUserImage] = useState(null);
+    const [imageLoading, setImageLoading] = useState(false);
+
+    useEffect(() => {
+        if (user) {
+            setFormData({
+                name: user.name || '',
+                email: user.email || '',
+            });
+        }
+    }, [user]);
+
+    useEffect(() => {
+        if (user?.userId) {
+            fetchUserImage();
+        }
+    }, [user]);
+
+    const fetchUserImage = async () => {
+        try {
+            const imageUrl = await userImageService.getUserImage(user.userId);
+            if (imageUrl) setUserImage(imageUrl);
+        } catch (error) {
+            console.error('Failed to fetch user image', error);
+        }
+    };
+
+    const handleImageUpload = async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        setImageLoading(true);
+        try {
+            const response = await userImageService.uploadUserImage(user.userId, file);
+            // The backend returns the URL string directly or as part of an object?
+            // Based on userImageService.js: return response.data;
+            // Let's assume it returns the URL string or we might need to adjust.
+            // If it returns an object, we might need response.imageUrl or similar.
+            // But looking at getUserImage it returns response.data which is "image URL string".
+            // So upload likely returns the same or similar.
+            // Let's assume response.data is the URL.
+            // Wait, userImageService.uploadUserImage returns response.data.
+            setUserImage(response);
+
+            addToast({
+                type: 'success',
+                title: 'Image Updated',
+                message: 'Profile picture updated successfully'
+            });
+        } catch (error) {
+            addToast({
+                type: 'error',
+                title: 'Upload Failed',
+                message: 'Failed to upload profile picture'
+            });
+        } finally {
+            setImageLoading(false);
+        }
+    };
 
     const handleInputChange = (e) => {
         setFormData({
@@ -123,12 +183,33 @@ export default function Profile() {
                     <div className="md:col-span-1">
                         <div className="card text-center">
                             <div className="relative inline-block">
-                                <div className="w-32 h-32 bg-gradient-to-br from-primary-400 to-secondary-400 rounded-full flex items-center justify-center text-white text-4xl font-bold mx-auto mb-4">
-                                    {user?.name?.charAt(0).toUpperCase()}
+                                <div className="w-32 h-32 rounded-full overflow-hidden bg-gray-200 mx-auto mb-4 border-4 border-white shadow-lg relative">
+                                    {imageLoading ? (
+                                        <div className="w-full h-full flex items-center justify-center bg-gray-100">
+                                            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600"></div>
+                                        </div>
+                                    ) : userImage ? (
+                                        <img
+                                            src={userImage}
+                                            alt={user?.name}
+                                            className="w-full h-full object-cover"
+                                        />
+                                    ) : (
+                                        <div className="w-full h-full bg-gradient-to-br from-primary-400 to-secondary-400 flex items-center justify-center text-white text-4xl font-bold">
+                                            {user?.name?.charAt(0).toUpperCase()}
+                                        </div>
+                                    )}
                                 </div>
-                                <button className="absolute bottom-2 right-2 w-10 h-10 bg-white rounded-full shadow-lg flex items-center justify-center hover:bg-gray-50 transition-colors">
+                                <label className="absolute bottom-2 right-2 w-10 h-10 bg-white rounded-full shadow-lg flex items-center justify-center hover:bg-gray-50 transition-colors cursor-pointer">
                                     <Camera className="w-5 h-5 text-gray-600" />
-                                </button>
+                                    <input
+                                        type="file"
+                                        className="hidden"
+                                        accept="image/*"
+                                        onChange={handleImageUpload}
+                                        disabled={imageLoading}
+                                    />
+                                </label>
                             </div>
                             <h2 className="text-xl font-bold text-gray-900">{user?.name}</h2>
                             <p className="text-gray-600 text-sm mt-1">{user?.role}</p>
@@ -184,20 +265,7 @@ export default function Profile() {
                                     />
                                 </div>
 
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                                        <Phone className="w-4 h-4 inline mr-2" />
-                                        Phone Number
-                                    </label>
-                                    <input
-                                        type="tel"
-                                        name="mobile"
-                                        value={formData.mobile}
-                                        onChange={handleInputChange}
-                                        disabled={!isEditing}
-                                        className="input"
-                                    />
-                                </div>
+
 
                                 {isEditing && (
                                     <div className="flex gap-3 pt-4">

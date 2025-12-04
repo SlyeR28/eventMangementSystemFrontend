@@ -3,19 +3,36 @@ import { useNavigate } from 'react-router-dom';
 import { Trash2, Plus, Minus, ShoppingBag } from 'lucide-react';
 import useAuthStore from '../store/authStore';
 import useCartStore from '../store/cartStore';
+import { EmptyCart } from '../components/EmptyStates';
+import ConfirmModal from '../components/ConfirmModal';
 
 export default function Cart() {
     const navigate = useNavigate();
     const { user } = useAuthStore();
     const { items, totalItems, totalPrice, removeItem, updateQuantity, clearCart } = useCartStore();
     const [loading, setLoading] = useState(false);
+    const [showClearCartModal, setShowClearCartModal] = useState(false);
+    const [showRemoveItemModal, setShowRemoveItemModal] = useState(false);
+    const [itemToRemove, setItemToRemove] = useState(null);
 
     const handleQuantityChange = (ticketTypeId, newQuantity) => {
         if (newQuantity < 1) {
-            removeItem(ticketTypeId);
+            setItemToRemove(ticketTypeId);
+            setShowRemoveItemModal(true);
         } else {
             updateQuantity(ticketTypeId, newQuantity);
         }
+    };
+
+    const confirmRemoveItem = () => {
+        if (itemToRemove) {
+            removeItem(itemToRemove);
+            setItemToRemove(null);
+        }
+    };
+
+    const confirmClearCart = () => {
+        clearCart();
     };
 
     const handleCheckout = () => {
@@ -27,19 +44,7 @@ export default function Cart() {
         return (
             <div className="min-h-screen bg-gray-50 py-20">
                 <div className="container-custom">
-                    <div className="max-w-2xl mx-auto text-center">
-                        <ShoppingBag className="w-24 h-24 text-gray-300 mx-auto mb-6" />
-                        <h2 className="text-3xl font-bold text-gray-900 mb-4">Your cart is empty</h2>
-                        <p className="text-gray-600 mb-8">
-                            Looks like you haven't added any tickets yet. Browse our events to get started!
-                        </p>
-                        <button
-                            onClick={() => navigate('/events')}
-                            className="btn btn-primary px-8 py-3"
-                        >
-                            Browse Events
-                        </button>
-                    </div>
+                    <EmptyCart />
                 </div>
             </div>
         );
@@ -67,7 +72,10 @@ export default function Cart() {
                                     </div>
 
                                     <button
-                                        onClick={() => removeItem(item.ticketTypeId)}
+                                        onClick={() => {
+                                            setItemToRemove(item.ticketTypeId);
+                                            setShowRemoveItemModal(true);
+                                        }}
                                         className="text-red-600 hover:text-red-700 p-2"
                                         title="Remove from cart"
                                     >
@@ -106,7 +114,7 @@ export default function Cart() {
                         ))}
 
                         <button
-                            onClick={() => clearCart()}
+                            onClick={() => setShowClearCartModal(true)}
                             className="btn btn-secondary flex items-center gap-2"
                         >
                             <Trash2 className="w-4 h-4" />
@@ -153,6 +161,31 @@ export default function Cart() {
                         </div>
                     </div>
                 </div>
+
+                <ConfirmModal
+                    isOpen={showClearCartModal}
+                    onClose={() => setShowClearCartModal(false)}
+                    onConfirm={confirmClearCart}
+                    title="Clear Cart"
+                    message="Are you sure you want to remove all items from your cart?"
+                    confirmText="Clear Cart"
+                    cancelText="Cancel"
+                    type="danger"
+                />
+
+                <ConfirmModal
+                    isOpen={showRemoveItemModal}
+                    onClose={() => {
+                        setShowRemoveItemModal(false);
+                        setItemToRemove(null);
+                    }}
+                    onConfirm={confirmRemoveItem}
+                    title="Remove Item"
+                    message="Are you sure you want to remove this item from your cart?"
+                    confirmText="Remove"
+                    cancelText="Cancel"
+                    type="danger"
+                />
             </div>
         </div>
     );

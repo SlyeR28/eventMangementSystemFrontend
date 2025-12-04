@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
-import { ArrowLeft, Plus, X } from 'lucide-react';
+import { ArrowLeft, Plus, X, Upload } from 'lucide-react';
 import eventService from '../../services/eventService';
 
 export default function EditEvent() {
@@ -12,6 +12,8 @@ export default function EditEvent() {
     const [error, setError] = useState('');
     const [event, setEvent] = useState(null);
     const [tickets, setTickets] = useState([]);
+    const [existingImages, setExistingImages] = useState([]);
+    const [newImageFiles, setNewImageFiles] = useState([]);
 
     const {
         register,
@@ -32,6 +34,15 @@ export default function EditEvent() {
         const updated = [...tickets];
         updated[index][field] = value;
         setTickets(updated);
+    };
+
+    const handleImageChange = (e) => {
+        const files = Array.from(e.target.files);
+        setNewImageFiles([...newImageFiles, ...files]);
+    };
+
+    const removeNewImage = (index) => {
+        setNewImageFiles(newImageFiles.filter((_, i) => i !== index));
     };
 
     useEffect(() => {
@@ -59,6 +70,10 @@ export default function EditEvent() {
                     price: t.currentPrice, // Map currentPrice to price
                     quantity: t.initialQuantity || t.quantity // Use initial or current quantity
                 })));
+            }
+
+            if (data.imageInfos) {
+                setExistingImages(data.imageInfos);
             }
         } catch (err) {
             setError('Failed to load event');
@@ -98,6 +113,10 @@ export default function EditEvent() {
                     quantity: parseInt(t.quantity)
                 }))
             });
+
+            if (newImageFiles.length > 0) {
+                await eventService.uploadEventImage(id, newImageFiles);
+            }
 
             navigate('/organizer/dashboard');
         } catch (err) {
@@ -303,6 +322,70 @@ export default function EditEvent() {
                                         </button>
                                     </div>
                                 ))}
+                            </div>
+                        </div>
+
+                        {/* Event Images */}
+                        <div>
+                            <h2 className="text-xl font-semibold text-gray-900 mb-4">Event Images</h2>
+
+                            <div className="space-y-4">
+                                {/* Existing Images */}
+                                {existingImages.length > 0 && (
+                                    <div className="mb-4">
+                                        <h3 className="text-sm font-medium text-gray-700 mb-2">Existing Images</h3>
+                                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                                            {existingImages.map((img, index) => (
+                                                <div key={index} className="relative group">
+                                                    <img
+                                                        src={img.securedUrl}
+                                                        alt={`Event ${index}`}
+                                                        className="w-full h-32 object-cover rounded-lg"
+                                                    />
+                                                    {/* Optional: Add delete button if backend supports it */}
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* Upload New Images */}
+                                <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-primary-500 transition-colors">
+                                    <input
+                                        type="file"
+                                        multiple
+                                        accept="image/*"
+                                        onChange={handleImageChange}
+                                        className="hidden"
+                                        id="event-images"
+                                    />
+                                    <label htmlFor="event-images" className="cursor-pointer flex flex-col items-center">
+                                        <Upload className="w-12 h-12 text-gray-400 mb-2" />
+                                        <span className="text-gray-600">Click to upload new images</span>
+                                        <span className="text-sm text-gray-500 mt-1">(JPG, PNG, max 5MB)</span>
+                                    </label>
+                                </div>
+
+                                {newImageFiles.length > 0 && (
+                                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                                        {newImageFiles.map((file, index) => (
+                                            <div key={index} className="relative group">
+                                                <img
+                                                    src={URL.createObjectURL(file)}
+                                                    alt={`Preview ${index}`}
+                                                    className="w-full h-32 object-cover rounded-lg"
+                                                />
+                                                <button
+                                                    type="button"
+                                                    onClick={() => removeNewImage(index)}
+                                                    className="absolute top-2 right-2 bg-red-500 text-white p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                                                >
+                                                    <X className="w-4 h-4" />
+                                                </button>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
                             </div>
                         </div>
 

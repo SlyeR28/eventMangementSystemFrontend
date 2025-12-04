@@ -29,16 +29,17 @@ apiClient.interceptors.response.use(
     (response) => response,
     (error) => {
         if (error.response) {
-            // Handle 401 Unauthorized - redirect to login
-            if (error.response.status === 401) {
+            // Handle 401 Unauthorized or 403 with JWT expired - redirect to login
+            if (error.response.status === 401 ||
+                (error.response.status === 403 && error.response.data?.message?.includes('JWT expired'))) {
                 localStorage.removeItem('token');
                 localStorage.removeItem('user');
                 window.location.href = '/login';
             }
 
-            // Handle 403 Forbidden
+            // Handle other 403 Forbidden
             if (error.response.status === 403) {
-                console.error('Access denied');
+                console.error('Access denied:', error.response.data?.message || 'Forbidden');
             }
         }
         return Promise.reject(error);
