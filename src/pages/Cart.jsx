@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Trash2, Plus, Minus, ShoppingBag } from 'lucide-react';
+import { Trash2, Plus, Minus, ShoppingBag, Calendar, MapPin } from 'lucide-react';
+import { format } from 'date-fns';
 import useAuthStore from '../store/authStore';
 import useCartStore from '../store/cartStore';
 import { EmptyCart } from '../components/EmptyStates';
@@ -60,54 +61,85 @@ export default function Cart() {
                     <div className="lg:col-span-2 space-y-4">
                         {items.map((item) => (
                             <div key={item.ticketTypeId} className="card">
-                                <div className="flex items-start justify-between">
+                                <div className="flex gap-4">
+                                    {/* Event Image */}
+                                    {item.eventImage && (
+                                        <div className="flex-shrink-0">
+                                            <img
+                                                src={item.eventImage}
+                                                alt={item.eventName}
+                                                className="w-32 h-32 object-cover rounded-lg"
+                                                onError={(e) => {
+                                                    e.target.style.display = 'none';
+                                                }}
+                                            />
+                                        </div>
+                                    )}
+
+                                    {/* Item Details */}
                                     <div className="flex-1">
-                                        <h3 className="text-xl font-semibold text-gray-900 mb-1">
-                                            {item.eventName}
-                                        </h3>
-                                        <p className="text-gray-600 mb-3">{item.ticketName}</p>
-                                        <p className="text-2xl font-bold text-primary-600">
-                                            ₹{item.price}
-                                        </p>
-                                    </div>
+                                        <div className="flex items-start justify-between">
+                                            <div className="flex-1">
+                                                <h3 className="text-xl font-semibold text-gray-900 mb-1">
+                                                    {item.eventName}
+                                                </h3>
+                                                <p className="text-gray-600 mb-2">{item.ticketName}</p>
+                                                {item.venue && (
+                                                    <p className="text-sm text-gray-500 flex items-center gap-1">
+                                                        <MapPin className="w-4 h-4" />
+                                                        {item.venue}
+                                                    </p>
+                                                )}
+                                                {item.startTime && (
+                                                    <p className="text-sm text-gray-500 flex items-center gap-1 mt-1">
+                                                        <Calendar className="w-4 h-4" />
+                                                        {format(new Date(item.startTime), 'MMM dd, yyyy • h:mm a')}
+                                                    </p>
+                                                )}
+                                                <p className="text-2xl font-bold text-primary-600 mt-2">
+                                                    ₹{item.price}
+                                                </p>
+                                            </div>
 
-                                    <button
-                                        onClick={() => {
-                                            setItemToRemove(item.ticketTypeId);
-                                            setShowRemoveItemModal(true);
-                                        }}
-                                        className="text-red-600 hover:text-red-700 p-2"
-                                        title="Remove from cart"
-                                    >
-                                        <Trash2 className="w-5 h-5" />
-                                    </button>
-                                </div>
+                                            <button
+                                                onClick={() => {
+                                                    setItemToRemove(item.ticketTypeId);
+                                                    setShowRemoveItemModal(true);
+                                                }}
+                                                className="text-red-600 hover:text-red-700 p-2"
+                                                title="Remove from cart"
+                                            >
+                                                <Trash2 className="w-5 h-5" />
+                                            </button>
+                                        </div>
 
-                                <div className="flex items-center justify-between mt-4 pt-4 border-t border-gray-200">
-                                    <div className="flex items-center gap-3">
-                                        <span className="text-gray-600">Quantity:</span>
-                                        <button
-                                            onClick={() => handleQuantityChange(item.ticketTypeId, item.quantity - 1)}
-                                            className="w-8 h-8 rounded-full bg-gray-200 hover:bg-gray-300 flex items-center justify-center"
-                                        >
-                                            <Minus className="w-4 h-4" />
-                                        </button>
-                                        <span className="w-12 text-center font-semibold text-lg">
-                                            {item.quantity}
-                                        </span>
-                                        <button
-                                            onClick={() => handleQuantityChange(item.ticketTypeId, item.quantity + 1)}
-                                            className="w-8 h-8 rounded-full bg-primary-600 hover:bg-primary-700 text-white flex items-center justify-center"
-                                        >
-                                            <Plus className="w-4 h-4" />
-                                        </button>
-                                    </div>
+                                        <div className="flex items-center justify-between mt-4 pt-4 border-t border-gray-200">
+                                            <div className="flex items-center gap-3">
+                                                <span className="text-gray-600">Quantity:</span>
+                                                <button
+                                                    onClick={() => handleQuantityChange(item.ticketTypeId, item.quantity - 1)}
+                                                    className="w-8 h-8 rounded-full bg-gray-200 hover:bg-gray-300 flex items-center justify-center"
+                                                >
+                                                    <Minus className="w-4 h-4" />
+                                                </button>
+                                                <span className="w-12 text-center font-semibold text-lg">
+                                                    {item.quantity}
+                                                </span>
+                                                <button
+                                                    onClick={() => handleQuantityChange(item.ticketTypeId, item.quantity + 1)}
+                                                    className="w-8 h-8 rounded-full bg-primary-600 hover:bg-primary-700 text-white flex items-center justify-center"
+                                                >
+                                                    <Plus className="w-4 h-4" />
+                                                </button>
+                                            </div>
 
-                                    <div className="text-right">
-                                        <p className="text-sm text-gray-600">Subtotal</p>
-                                        <p className="text-xl font-bold text-gray-900">
-                                            ₹{item.price * item.quantity}
-                                        </p>
+                                            <div className="text-right">
+                                                <p className="text-sm text-gray-600">Subtotal</p>
+                                                <p className="text-xl font-bold text-gray-900">
+                                                    ₹{item.price * item.quantity}
+                                                </p>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                             </div>

@@ -26,6 +26,17 @@ export default function EventDetails() {
 
             try {
                 const data = await eventService.getEventById(id);
+
+                // Fetch event images separately since they're stored with unidirectional mapping
+                try {
+                    const images = await eventService.getEventImages(id);
+                    // Merge images into event data
+                    data.imageInfos = images || [];
+                } catch (imgError) {
+                    console.log('No images found for event or error fetching images:', imgError);
+                    data.imageInfos = [];
+                }
+
                 setEvent(data);
             } catch (err) {
                 setError('Failed to load event details.');
@@ -63,7 +74,7 @@ export default function EventDetails() {
         let itemsAdded = 0;
         Object.entries(selectedTickets).forEach(([ticketTypeId, quantity]) => {
             if (quantity > 0) {
-                const ticket = event.tickets.find(t => t.ticketId === parseInt(ticketTypeId));
+                const ticket = event.ticketTypes.find(t => t.id === parseInt(ticketTypeId));
                 if (ticket) {
                     addItem({
                         ticketTypeId: parseInt(ticketTypeId),
@@ -72,6 +83,10 @@ export default function EventDetails() {
                         ticketName: ticket.name,
                         price: ticket.currentPrice,
                         quantity,
+                        // Additional event information
+                        eventImage: event.imageInfos?.[0]?.securedUrl || null,
+                        venue: event.venue || null,
+                        startTime: event.startTime || null,
                     });
                     itemsAdded++;
                 }
@@ -89,7 +104,7 @@ export default function EventDetails() {
 
     const getTotalPrice = () => {
         return Object.entries(selectedTickets).reduce((sum, [ticketTypeId, quantity]) => {
-            const ticket = event?.tickets?.find(t => t.ticketId === parseInt(ticketTypeId));
+            const ticket = event?.ticketTypes?.find(t => t.id === parseInt(ticketTypeId));
             return sum + (ticket ? ticket.currentPrice * quantity : 0);
         }, 0);
     };
@@ -195,10 +210,10 @@ export default function EventDetails() {
                         <div className="card sticky top-20">
                             <h2 className="text-2xl font-bold text-gray-900 mb-6">Select Tickets</h2>
 
-                            {event.tickets && event.tickets.length > 0 ? (
+                            {event.ticketTypes && event.ticketTypes.length > 0 ? (
                                 <div className="space-y-4">
-                                    {event.tickets.map((ticket) => (
-                                        <div key={ticket.ticketId} className="border border-gray-200 rounded-lg p-4">
+                                    {event.ticketTypes.map((ticket) => (
+                                        <div key={ticket.id} className="border border-gray-200 rounded-lg p-4">
                                             <div className="flex justify-between items-start mb-3">
                                                 <div>
                                                     <h3 className="font-semibold text-gray-900">{ticket.name}</h3>
@@ -213,18 +228,18 @@ export default function EventDetails() {
                                                 <span className="text-sm text-gray-600">Quantity:</span>
                                                 <div className="flex items-center gap-3">
                                                     <button
-                                                        onClick={() => handleQuantityChange(ticket.ticketId, -1)}
-                                                        disabled={!selectedTickets[ticket.ticketId]}
+                                                        onClick={() => handleQuantityChange(ticket.id, -1)}
+                                                        disabled={!selectedTickets[ticket.id]}
                                                         className="w-8 h-8 rounded-full bg-gray-200 hover:bg-gray-300 disabled:opacity-50 flex items-center justify-center"
                                                     >
                                                         <Minus className="w-4 h-4" />
                                                     </button>
                                                     <span className="w-8 text-center font-semibold">
-                                                        {selectedTickets[ticket.ticketId] || 0}
+                                                        {selectedTickets[ticket.id] || 0}
                                                     </span>
                                                     <button
-                                                        onClick={() => handleQuantityChange(ticket.ticketId, 1)}
-                                                        disabled={selectedTickets[ticket.ticketId] >= ticket.remainingQuantity}
+                                                        onClick={() => handleQuantityChange(ticket.id, 1)}
+                                                        disabled={selectedTickets[ticket.id] >= ticket.remainingQuantity}
                                                         className="w-8 h-8 rounded-full bg-primary-600 hover:bg-primary-700 text-white disabled:opacity-50 flex items-center justify-center"
                                                     >
                                                         <Plus className="w-4 h-4" />

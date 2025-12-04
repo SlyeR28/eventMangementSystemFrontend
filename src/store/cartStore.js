@@ -22,8 +22,20 @@ const useCartStore = create((set) => ({
                     totalPrice: updatedItems.reduce((sum, i) => sum + i.price * i.quantity, 0),
                 };
             } else {
-                // Add new item
-                const updatedItems = [...state.items, item];
+                // Add new item with complete information
+                const newItem = {
+                    ticketTypeId: item.ticketTypeId,
+                    eventId: item.eventId,
+                    eventName: item.eventName,
+                    ticketName: item.ticketName,
+                    price: item.price,
+                    quantity: item.quantity,
+                    // Additional event information for display
+                    eventImage: item.eventImage || null,
+                    venue: item.venue || null,
+                    startTime: item.startTime || null,
+                };
+                const updatedItems = [...state.items, newItem];
                 return {
                     items: updatedItems,
                     totalItems: updatedItems.reduce((sum, i) => sum + i.quantity, 0),
