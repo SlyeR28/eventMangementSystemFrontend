@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, Plus, X } from 'lucide-react';
 import eventService from '../../services/eventService';
 
 export default function EditEvent() {
@@ -11,6 +11,7 @@ export default function EditEvent() {
     const [saving, setSaving] = useState(false);
     const [error, setError] = useState('');
     const [event, setEvent] = useState(null);
+    const [tickets, setTickets] = useState([]);
 
     const {
         register,
@@ -18,6 +19,20 @@ export default function EditEvent() {
         setValue,
         formState: { errors },
     } = useForm();
+
+    const addTicketType = () => {
+        setTickets([...tickets, { name: '', price: '', quantity: '' }]);
+    };
+
+    const removeTicketType = (index) => {
+        setTickets(tickets.filter((_, i) => i !== index));
+    };
+
+    const updateTicketType = (index, field, value) => {
+        const updated = [...tickets];
+        updated[index][field] = value;
+        setTickets(updated);
+    };
 
     useEffect(() => {
         fetchEvent();
@@ -37,6 +52,14 @@ export default function EditEvent() {
             setValue('endTime', formatDateTimeLocal(data.endTime));
             setValue('salesStartTime', formatDateTimeLocal(data.salesStartTime));
             setValue('salesEndTime', formatDateTimeLocal(data.salesEndTime));
+
+            if (data.tickets) {
+                setTickets(data.tickets.map(t => ({
+                    name: t.name,
+                    price: t.currentPrice, // Map currentPrice to price
+                    quantity: t.initialQuantity || t.quantity // Use initial or current quantity
+                })));
+            }
         } catch (err) {
             setError('Failed to load event');
             console.error(err);
@@ -69,6 +92,11 @@ export default function EditEvent() {
                 endTime: data.endTime,
                 salesStartTime: data.salesStartTime,
                 salesEndTime: data.salesEndTime,
+                tickets: tickets.map(t => ({
+                    name: t.name,
+                    price: parseFloat(t.price),
+                    quantity: parseInt(t.quantity)
+                }))
             });
 
             navigate('/organizer/dashboard');
@@ -100,7 +128,7 @@ export default function EditEvent() {
                 </button>
 
                 <div className="card">
-                    <h1 className="text-3xl font-bold text-gray-900 mb-6">Edit Event</h1>
+                    <h1 className="text-3xl font-bold text-gray-900 mb-6">Edit Event {event && `- ${event.name}`}</h1>
 
                     {error && (
                         <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-6">
@@ -210,6 +238,71 @@ export default function EditEvent() {
                                         className="input"
                                     />
                                 </div>
+                            </div>
+                        </div>
+
+                        {/* Ticket Types */}
+                        <div>
+                            <div className="flex justify-between items-center mb-4">
+                                <h2 className="text-xl font-semibold text-gray-900">Ticket Types</h2>
+                                <button
+                                    type="button"
+                                    onClick={addTicketType}
+                                    className="btn btn-secondary text-sm flex items-center gap-2"
+                                >
+                                    <Plus className="w-4 h-4" />
+                                    Add Ticket Type
+                                </button>
+                            </div>
+
+                            {tickets.length === 0 && (
+                                <p className="text-gray-500 text-sm italic">No ticket types added yet.</p>
+                            )}
+
+                            <div className="space-y-4">
+                                {tickets.map((ticket, index) => (
+                                    <div key={index} className="flex gap-4 items-start p-4 bg-gray-50 rounded-lg border border-gray-200">
+                                        <div className="flex-1 space-y-4">
+                                            <div>
+                                                <input
+                                                    type="text"
+                                                    value={ticket.name}
+                                                    onChange={(e) => updateTicketType(index, 'name', e.target.value)}
+                                                    placeholder="Ticket Name (e.g., VIP, General)"
+                                                    className="input"
+                                                    required
+                                                />
+                                            </div>
+                                            <div className="grid grid-cols-2 gap-4">
+                                                <input
+                                                    type="number"
+                                                    value={ticket.price}
+                                                    onChange={(e) => updateTicketType(index, 'price', e.target.value)}
+                                                    placeholder="Price"
+                                                    className="input"
+                                                    min="0"
+                                                    required
+                                                />
+                                                <input
+                                                    type="number"
+                                                    value={ticket.quantity}
+                                                    onChange={(e) => updateTicketType(index, 'quantity', e.target.value)}
+                                                    placeholder="Quantity"
+                                                    className="input"
+                                                    min="1"
+                                                    required
+                                                />
+                                            </div>
+                                        </div>
+                                        <button
+                                            type="button"
+                                            onClick={() => removeTicketType(index)}
+                                            className="text-red-500 hover:text-red-700 p-2"
+                                        >
+                                            <X className="w-5 h-5" />
+                                        </button>
+                                    </div>
+                                ))}
                             </div>
                         </div>
 

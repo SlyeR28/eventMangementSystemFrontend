@@ -27,34 +27,37 @@ export default function Events() {
         totalElements: 0,
     });
 
+    const [appliedFilters, setAppliedFilters] = useState(filters);
+
     useEffect(() => {
+        const fetchEvents = async () => {
+            setLoading(true);
+            setError('');
+
+            try {
+                const response = await eventService.searchEvents(appliedFilters);
+                setEvents(response.content || []);
+                setPagination({
+                    currentPage: response.currentPage,
+                    totalPages: response.totalPages,
+                    totalElements: response.totalElements,
+                });
+            } catch (err) {
+                setError('Failed to load events. Please try again.');
+                console.error(err);
+            } finally {
+                setLoading(false);
+            }
+        };
+
         fetchEvents();
-    }, [filters.page]);
-
-    const fetchEvents = async () => {
-        setLoading(true);
-        setError('');
-
-        try {
-            const response = await eventService.searchEvents(filters);
-            setEvents(response.content || []);
-            setPagination({
-                currentPage: response.currentPage,
-                totalPages: response.totalPages,
-                totalElements: response.totalElements,
-            });
-        } catch (err) {
-            setError('Failed to load events. Please try again.');
-            console.error(err);
-        } finally {
-            setLoading(false);
-        }
-    };
+    }, [appliedFilters]);
 
     const handleSearch = (e) => {
         e.preventDefault();
-        setFilters({ ...filters, page: 0 });
-        fetchEvents();
+        const newFilters = { ...filters, page: 0 };
+        setFilters(newFilters);
+        setAppliedFilters(newFilters);
     };
 
     const handleFilterChange = (key, value) => {
@@ -62,7 +65,7 @@ export default function Events() {
     };
 
     const clearFilters = () => {
-        setFilters({
+        const resetFilters = {
             keyword: '',
             venue: '',
             category: '',
@@ -71,7 +74,14 @@ export default function Events() {
             endTime: '',
             page: 0,
             pageSize: 12,
-        });
+        };
+        setFilters(resetFilters);
+        setAppliedFilters(resetFilters);
+    };
+
+    const handlePageChange = (newPage) => {
+        setAppliedFilters({ ...appliedFilters, page: newPage });
+        setFilters(prev => ({ ...prev, page: newPage }));
     };
 
     return (
@@ -222,7 +232,7 @@ export default function Events() {
                         {pagination.totalPages > 1 && (
                             <div className="flex justify-center gap-2 mt-12">
                                 <button
-                                    onClick={() => setFilters({ ...filters, page: filters.page - 1 })}
+                                    onClick={() => handlePageChange(filters.page - 1)}
                                     disabled={filters.page === 0}
                                     className="btn btn-secondary disabled:opacity-50 disabled:cursor-not-allowed"
                                 >
@@ -234,7 +244,7 @@ export default function Events() {
                                 </span>
 
                                 <button
-                                    onClick={() => setFilters({ ...filters, page: filters.page + 1 })}
+                                    onClick={() => handlePageChange(filters.page + 1)}
                                     disabled={filters.page >= pagination.totalPages - 1}
                                     className="btn btn-secondary disabled:opacity-50 disabled:cursor-not-allowed"
                                 >

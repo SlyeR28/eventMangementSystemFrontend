@@ -10,20 +10,20 @@ export default function MyOrders() {
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        fetchOrders();
-    }, []);
+        const fetchOrders = async () => {
+            setLoading(true);
+            try {
+                const data = await orderService.getOrders(user.userId);
+                setOrders(data || []);
+            } catch (err) {
+                console.error('Failed to fetch orders:', err);
+            } finally {
+                setLoading(false);
+            }
+        };
 
-    const fetchOrders = async () => {
-        setLoading(true);
-        try {
-            const data = await orderService.getOrders(user.userId);
-            setOrders(data || []);
-        } catch (err) {
-            console.error('Failed to fetch orders:', err);
-        } finally {
-            setLoading(false);
-        }
-    };
+        fetchOrders();
+    }, [user.userId]);
 
     const getStatusColor = (status) => {
         switch (status?.toUpperCase()) {

@@ -16,26 +16,26 @@ export default function OrganizerDashboard() {
     });
 
     useEffect(() => {
+        const fetchOrganizerEvents = async () => {
+            setLoading(true);
+            try {
+                const data = await eventService.getEventsByOrganizer(user.userId);
+                setEvents(data || []);
+
+                setStats({
+                    totalEvents: data.length,
+                    publishedEvents: data.filter(e => e.status === 'PUBLISHED' || e.status === 'ONGOING').length,
+                    draftEvents: data.filter(e => e.status === 'DRAFT').length,
+                });
+            } catch (err) {
+                console.error('Failed to fetch events:', err);
+            } finally {
+                setLoading(false);
+            }
+        };
+
         fetchOrganizerEvents();
-    }, []);
-
-    const fetchOrganizerEvents = async () => {
-        setLoading(true);
-        try {
-            const data = await eventService.getEventsByOrganizer(user.userId);
-            setEvents(data || []);
-
-            setStats({
-                totalEvents: data.length,
-                publishedEvents: data.filter(e => e.status === 'PUBLISHED' || e.status === 'ONGOING').length,
-                draftEvents: data.filter(e => e.status === 'DRAFT').length,
-            });
-        } catch (err) {
-            console.error('Failed to fetch events:', err);
-        } finally {
-            setLoading(false);
-        }
-    };
+    }, [user.userId]);
 
     const handleDelete = async (eventId) => {
         if (!window.confirm('Are you sure you want to delete this event?')) return;

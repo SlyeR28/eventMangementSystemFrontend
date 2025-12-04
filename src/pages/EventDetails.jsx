@@ -19,23 +19,23 @@ export default function EventDetails() {
     const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
     useEffect(() => {
+        const fetchEventDetails = async () => {
+            setLoading(true);
+            setError('');
+
+            try {
+                const data = await eventService.getEventById(id);
+                setEvent(data);
+            } catch (err) {
+                setError('Failed to load event details.');
+                console.error(err);
+            } finally {
+                setLoading(false);
+            }
+        };
+
         fetchEventDetails();
     }, [id]);
-
-    const fetchEventDetails = async () => {
-        setLoading(true);
-        setError('');
-
-        try {
-            const data = await eventService.getEventById(id);
-            setEvent(data);
-        } catch (err) {
-            setError('Failed to load event details.');
-            console.error(err);
-        } finally {
-            setLoading(false);
-        }
-    };
 
     const formatDate = (dateString) => {
         try {

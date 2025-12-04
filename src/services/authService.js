@@ -2,22 +2,26 @@ import apiClient from '../config/api';
 
 const authService = {
     async login(email, password) {
-        const response = await apiClient.post('/auth/login', { email, password });
+        // AuthController: POST /api/v1/auth/login
+        const response = await apiClient.post('/v1/auth/login', { email, password });
         return response.data;
     },
 
     async register(userData) {
-        const response = await apiClient.post('/auth/register', userData);
+        // UserController: POST /api/v1/user/register
+        const response = await apiClient.post('/v1/user/register', userData);
         return response.data;
     },
 
     async forgotPassword(email) {
-        const response = await apiClient.post('/auth/forgot-password', { email });
+        // AuthController: POST /api/v1/auth/forgot-password
+        const response = await apiClient.post('/v1/auth/forgot-password', { email });
         return response.data;
     },
 
     async resetPassword(token, newPassword, confirmPassword) {
-        const response = await apiClient.post('/auth/reset-password', {
+        // AuthController: POST /api/v1/auth/reset-password
+        const response = await apiClient.post('/v1/auth/reset-password', {
             token,
             newPassword,
             confirmPassword,
@@ -26,7 +30,8 @@ const authService = {
     },
 
     async changePassword(oldPassword, newPassword, confirmPassword) {
-        const response = await apiClient.post('/auth/change-password', {
+        // AuthController: POST /api/v1/auth/change-password
+        const response = await apiClient.post('/v1/auth/change-password', {
             oldPassword,
             newPassword,
             confirmPassword,

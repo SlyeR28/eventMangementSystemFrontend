@@ -12,20 +12,20 @@ export default function MyTickets() {
     const [filter, setFilter] = useState('all'); // all, upcoming, past
 
     useEffect(() => {
-        fetchTickets();
-    }, []);
+        const fetchTickets = async () => {
+            setLoading(true);
+            try {
+                const data = await ticketService.getUserTickets(user.userId);
+                setTickets(data || []);
+            } catch (err) {
+                console.error('Failed to fetch tickets:', err);
+            } finally {
+                setLoading(false);
+            }
+        };
 
-    const fetchTickets = async () => {
-        setLoading(true);
-        try {
-            const data = await ticketService.getUserTickets(user.userId);
-            setTickets(data || []);
-        } catch (err) {
-            console.error('Failed to fetch tickets:', err);
-        } finally {
-            setLoading(false);
-        }
-    };
+        fetchTickets();
+    }, [user.userId]);
 
     const filteredTickets = tickets.filter(ticket => {
         const eventDate = new Date(ticket.event?.startTime);

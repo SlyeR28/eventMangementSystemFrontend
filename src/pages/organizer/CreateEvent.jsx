@@ -46,9 +46,14 @@ export default function CreateEvent() {
                 salesStartTime: data.salesStartTime || data.startTime,
                 salesEndTime: data.salesEndTime || data.endTime,
                 categoryId: parseInt(data.categoryId) || 1,
+                tickets: tickets.map(t => ({
+                    name: t.name,
+                    price: parseFloat(t.price),
+                    quantity: parseInt(t.quantity)
+                }))
             };
 
-            const createdEvent = await eventService.createEvent(eventData);
+            await eventService.createEvent(eventData);
 
             // Navigate to organizer dashboard
             navigate('/organizer/dashboard');
@@ -200,6 +205,71 @@ export default function CreateEvent() {
                                         className="input"
                                     />
                                 </div>
+                            </div>
+                        </div>
+
+                        {/* Ticket Types */}
+                        <div>
+                            <div className="flex justify-between items-center mb-4">
+                                <h2 className="text-xl font-semibold text-gray-900">Ticket Types</h2>
+                                <button
+                                    type="button"
+                                    onClick={addTicketType}
+                                    className="btn btn-secondary text-sm flex items-center gap-2"
+                                >
+                                    <Plus className="w-4 h-4" />
+                                    Add Ticket Type
+                                </button>
+                            </div>
+
+                            {tickets.length === 0 && (
+                                <p className="text-gray-500 text-sm italic">No ticket types added yet.</p>
+                            )}
+
+                            <div className="space-y-4">
+                                {tickets.map((ticket, index) => (
+                                    <div key={index} className="flex gap-4 items-start p-4 bg-gray-50 rounded-lg border border-gray-200">
+                                        <div className="flex-1 space-y-4">
+                                            <div>
+                                                <input
+                                                    type="text"
+                                                    value={ticket.name}
+                                                    onChange={(e) => updateTicketType(index, 'name', e.target.value)}
+                                                    placeholder="Ticket Name (e.g., VIP, General)"
+                                                    className="input"
+                                                    required
+                                                />
+                                            </div>
+                                            <div className="grid grid-cols-2 gap-4">
+                                                <input
+                                                    type="number"
+                                                    value={ticket.price}
+                                                    onChange={(e) => updateTicketType(index, 'price', e.target.value)}
+                                                    placeholder="Price"
+                                                    className="input"
+                                                    min="0"
+                                                    required
+                                                />
+                                                <input
+                                                    type="number"
+                                                    value={ticket.quantity}
+                                                    onChange={(e) => updateTicketType(index, 'quantity', e.target.value)}
+                                                    placeholder="Quantity"
+                                                    className="input"
+                                                    min="1"
+                                                    required
+                                                />
+                                            </div>
+                                        </div>
+                                        <button
+                                            type="button"
+                                            onClick={() => removeTicketType(index)}
+                                            className="text-red-500 hover:text-red-700 p-2"
+                                        >
+                                            <X className="w-5 h-5" />
+                                        </button>
+                                    </div>
+                                ))}
                             </div>
                         </div>
 
