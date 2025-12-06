@@ -3,6 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { ArrowLeft, Plus, X, Upload } from 'lucide-react';
 import eventService from '../../services/eventService';
+import PricingManager from '../../components/PricingManager';
 
 export default function EditEvent() {
     const { id } = useParams();
@@ -46,42 +47,48 @@ export default function EditEvent() {
     };
 
     useEffect(() => {
+        const fetchEvent = async () => {
+            setLoading(true);
+            try {
+                const data = await eventService.getEventById(id);
+                setEvent(data);
+
+                // Populate form
+                setValue('name', data.name);
+                setValue('description', data.description);
+                setValue('venue', data.venue);
+                setValue('startTime', formatDateTimeLocal(data.startTime));
+                setValue('endTime', formatDateTimeLocal(data.endTime));
+                setValue('salesStartTime', formatDateTimeLocal(data.salesStartTime));
+                setValue('salesEndTime', formatDateTimeLocal(data.salesEndTime));
+
+                if (data.tickets) {
+                    setTickets(data.tickets.map(t => ({
+                        id: t.id, // Include ID for pricing management
+                        name: t.name,
+                        price: t.currentPrice,
+                        quantity: t.initialQuantity || t.quantity,
+                        currentPrice: t.currentPrice,
+                        basePrice: t.basePrice || t.currentPrice,
+                        totalQuantity: t.totalQuantity,
+                        remainingQuantity: t.remainingQuantity,
+                        pricingStrategy: t.pricingStrategy || 'DEFAULT'
+                    })));
+                }
+
+                if (data.imageInfos) {
+                    setExistingImages(data.imageInfos);
+                }
+            } catch (err) {
+                setError('Failed to load event');
+                console.error(err);
+            } finally {
+                setLoading(false);
+            }
+        };
+
         fetchEvent();
-    }, [id]);
-
-    const fetchEvent = async () => {
-        setLoading(true);
-        try {
-            const data = await eventService.getEventById(id);
-            setEvent(data);
-
-            // Populate form
-            setValue('name', data.name);
-            setValue('description', data.description);
-            setValue('venue', data.venue);
-            setValue('startTime', formatDateTimeLocal(data.startTime));
-            setValue('endTime', formatDateTimeLocal(data.endTime));
-            setValue('salesStartTime', formatDateTimeLocal(data.salesStartTime));
-            setValue('salesEndTime', formatDateTimeLocal(data.salesEndTime));
-
-            if (data.tickets) {
-                setTickets(data.tickets.map(t => ({
-                    name: t.name,
-                    price: t.currentPrice, // Map currentPrice to price
-                    quantity: t.initialQuantity || t.quantity // Use initial or current quantity
-                })));
-            }
-
-            if (data.imageInfos) {
-                setExistingImages(data.imageInfos);
-            }
-        } catch (err) {
-            setError('Failed to load event');
-            console.error(err);
-        } finally {
-            setLoading(false);
-        }
-    };
+    }, [id, setValue]);
 
     const formatDateTimeLocal = (dateString) => {
         if (!dateString) return '';
@@ -388,6 +395,30 @@ export default function EditEvent() {
                                 )}
                             </div>
                         </div>
+
+                        {/* Dynamic Pricing Management */}
+                        {event && event.ticketTypes && event.ticketTypes.length > 0 && (
+                            <div>
+                                <h2 className="text-xl font-semibold text-gray-900 mb-4">Dynamic Pricing Management</h2>
+                                <p className="text-sm text-gray-600 mb-4">
+                                    Manage pricing strategies for your ticket types. Dynamic pricing can help maximize revenue based on demand or time.
+                                </p>
+                                <div className="grid md:grid-cols-2 gap-6">
+                                    {event.ticketTypes.map((ticketType) => (
+                                        <PricingManager
+                                            key={ticketType.id}
+                                            ticketType={ticketType}
+                                            onPricingUpdate={() => {
+                                                // Refresh event data after pricing update
+                                                // Note: fetchEvent is now inside useEffect, so we need to trigger a re-fetch
+                                                // For now, we'll just reload the page or refetch manually
+                                                window.location.reload();
+                                            }}
+                                        />
+                                    ))}
+                                </div>
+                            </div>
+                        )}
 
                         <div className="flex gap-4 pt-6 border-t border-gray-200">
                             <button

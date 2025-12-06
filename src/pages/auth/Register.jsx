@@ -1,14 +1,13 @@
 import { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
-import useAuthStore from '../../store/authStore';
 import authService from '../../services/authService';
 
 export default function Register() {
-    const navigate = useNavigate();
-    const setAuth = useAuthStore((state) => state.setAuth);
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
+
+    const [success, setSuccess] = useState(false);
 
     const {
         register,
@@ -24,20 +23,42 @@ export default function Register() {
         setError('');
 
         try {
-            const response = await authService.register({
+            await authService.register({
                 fullName: data.fullName,
                 email: data.email,
                 password: data.password,
                 role: data.role || 'USER',
             });
-            setAuth(response.user, response.token);
-            navigate('/');
+            setSuccess(true);
         } catch (err) {
             setError(err.response?.data?.message || 'Registration failed. Please try again.');
         } finally {
             setLoading(false);
         }
     };
+
+    if (success) {
+        return (
+            <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary-50 to-secondary-50 py-12 px-4 sm:px-6 lg:px-8">
+                <div className="max-w-md w-full space-y-8 bg-white p-10 rounded-2xl shadow-soft text-center">
+                    <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-green-100">
+                        <svg className="h-6 w-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
+                        </svg>
+                    </div>
+                    <h2 className="text-3xl font-extrabold text-gray-900">Account created!</h2>
+                    <p className="text-gray-600">
+                        Please check your email to activate your account before logging in.
+                    </p>
+                    <div className="mt-6">
+                        <Link to="/login" className="btn btn-primary w-full inline-block">
+                            Return to Login
+                        </Link>
+                    </div>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary-50 to-secondary-50 py-12 px-4 sm:px-6 lg:px-8">

@@ -16,28 +16,28 @@ export default function UserDashboard() {
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
+        const fetchDashboardData = async () => {
+            setLoading(true);
+            try {
+                const [tickets, orders] = await Promise.all([
+                    ticketService.getUserTickets(user.userId),
+                    orderService.getOrders(user.userId),
+                ]);
+
+                setStats({
+                    totalTickets: tickets.length || 0,
+                    upcomingEvents: tickets.filter(t => new Date(t.event?.startTime) > new Date()).length || 0,
+                    totalOrders: orders.length || 0,
+                });
+            } catch (err) {
+                console.error('Failed to fetch dashboard data:', err);
+            } finally {
+                setLoading(false);
+            }
+        };
+
         fetchDashboardData();
-    }, []);
-
-    const fetchDashboardData = async () => {
-        setLoading(true);
-        try {
-            const [tickets, orders] = await Promise.all([
-                ticketService.getUserTickets(user.userId),
-                orderService.getOrders(user.userId),
-            ]);
-
-            setStats({
-                totalTickets: tickets.length || 0,
-                upcomingEvents: tickets.filter(t => new Date(t.event?.startTime) > new Date()).length || 0,
-                totalOrders: orders.length || 0,
-            });
-        } catch (err) {
-            console.error('Failed to fetch dashboard data:', err);
-        } finally {
-            setLoading(false);
-        }
-    };
+    }, [user.userId]);
 
     const quickActions = [
         { name: 'My Tickets', icon: Ticket, link: '/my-tickets', color: 'primary' },

@@ -87,21 +87,21 @@ export default function Events() {
     };
 
     return (
-        <div className="min-h-screen bg-gray-50">
+        <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-purple-50">
             {/* Search Header */}
-            <div className="bg-white shadow-sm py-8">
+            <div className="bg-white/70 backdrop-blur-md shadow-premium border-b border-white/20 py-8">
                 <div className="container-custom">
-                    <h1 className="text-4xl font-bold text-gray-900 mb-6">Discover Events</h1>
+                    <h1 className="text-4xl font-bold bg-gradient-to-r from-primary-600 to-secondary-600 bg-clip-text text-transparent mb-6 animate-fade-in">Discover Events</h1>
 
-                    <form onSubmit={handleSearch} className="flex gap-4">
+                    <form onSubmit={handleSearch} className="flex gap-4 animate-slide-up">
                         <div className="flex-1 relative">
-                            <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+                            <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-primary-600 w-5 h-5" />
                             <input
                                 type="text"
                                 value={filters.keyword}
                                 onChange={(e) => handleFilterChange('keyword', e.target.value)}
                                 placeholder="Search events by name or description..."
-                                className="input pl-12 w-full"
+                                className="input pl-12 w-full shadow-md"
                             />
                         </div>
                         <button
@@ -119,7 +119,7 @@ export default function Events() {
 
                     {/* Advanced Filters */}
                     {showFilters && (
-                        <div className="mt-6 p-6 bg-gray-50 rounded-lg space-y-4 animate-slide-up">
+                        <div className="mt-6 p-6 card-glass rounded-2xl space-y-4 animate-slide-up">
                             <div className="grid md:grid-cols-3 gap-4">
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -220,13 +220,19 @@ export default function Events() {
                     <NoEventsFound />
                 ) : (
                     <>
-                        <div className="mb-6 text-gray-600">
+                        <div className="mb-6 text-gray-600 animate-fade-in">
                             Found {pagination.totalElements} event{pagination.totalElements !== 1 ? 's' : ''}
                         </div>
 
                         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-                            {events.map((event) => (
-                                <EventCard key={event.id} event={event} />
+                            {events.map((event, index) => (
+                                <div
+                                    key={event.id}
+                                    style={{ animationDelay: `${index * 0.1}s` }}
+                                    className="animate-fade-in"
+                                >
+                                    <EventCard event={event} />
+                                </div>
                             ))}
                         </div>
 

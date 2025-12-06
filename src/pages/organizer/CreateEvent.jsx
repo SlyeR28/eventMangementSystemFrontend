@@ -2,17 +2,15 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { ArrowLeft, Plus, X, Upload } from 'lucide-react';
-import useAuthStore from '../../store/authStore';
 import eventService from '../../services/eventService';
 
 export default function CreateEvent() {
     const navigate = useNavigate();
-    const { user } = useAuthStore();
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
 
     const [tickets, setTickets] = useState([]);
-    const [imageFiles, setImageFiles] = useState([]);
+    const [imageFiles] = useState([]);
 
     const {
         register,

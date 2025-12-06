@@ -37,7 +37,7 @@ export default function Checkout() {
                 addToast({ type: 'error', message: 'Failed to load payment gateway. Please refresh the page.' });
             }
         });
-    }, []);
+    }, [addToast]);
 
     const handlePayment = async () => {
         if (!razorpayLoaded) {
@@ -70,8 +70,16 @@ export default function Checkout() {
             const paymentResponse = await orderService.createPayment(paymentRequest, 'razorpay');
 
             // Step 3: Configure Razorpay options
+            const razorpayKey = import.meta.env.VITE_RAZORPAY_KEY_ID;
+
+            if (!razorpayKey) {
+                addToast({ type: 'error', message: 'Payment configuration missing. Please contact support.' });
+                setLoading(false);
+                return;
+            }
+
             const options = {
-                key: import.meta.env.VITE_RAZORPAY_KEY_ID || 'rzp_test_YOUR_KEY_ID',
+                key: razorpayKey,
                 amount: paymentResponse.amount * 100, // Convert to paise
                 currency: 'INR',
                 name: 'Event Management System',
@@ -152,8 +160,8 @@ export default function Checkout() {
                     navigate('/my-tickets');
                 }, 2000);
             }, 2000);
-        } catch (error) {
-            console.error('Order creation failed:', error);
+        } catch {
+            console.error('Order creation failed');
             addToast({ type: 'error', message: 'Failed to create order. Please try again.' });
             setLoading(false);
         }

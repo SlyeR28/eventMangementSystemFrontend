@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Calendar, MapPin, Tag, Clock, Minus, Plus } from 'lucide-react';
+import { Calendar, MapPin, Tag, Clock, Minus, Plus, TrendingUp, AlertCircle } from 'lucide-react';
 import { format } from 'date-fns';
 import { EventDetailSkeleton } from '../components/LoadingSkeletons';
 import eventService from '../services/eventService';
+import pricingService from '../services/pricingService';
 import useAuthStore from '../store/authStore';
 import useCartStore from '../store/cartStore';
 
@@ -123,12 +124,18 @@ export default function EventDetails() {
         );
     }
 
+    const getSoldPercentage = (ticket) => {
+        if (!ticket.totalQuantity) return 0;
+        const sold = ticket.totalQuantity - ticket.remainingQuantity;
+        return (sold / ticket.totalQuantity) * 100;
+    };
+
     return (
-        <div className="min-h-screen bg-gray-50 py-12">
+        <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-purple-50 py-12">
             <div className="container-custom">
                 <div className="grid lg:grid-cols-3 gap-8">
                     {/* Main Content */}
-                    <div className="lg:col-span-2 space-y-6">
+                    <div className="lg:col-span-2 space-y-6 animate-fade-in">
                         {/* Image Gallery */}
                         <div className="card">
                             {event.imageInfos && event.imageInfos.length > 0 && event.imageInfos[currentImageIndex]?.securedUrl ? (
@@ -207,57 +214,89 @@ export default function EventDetails() {
 
                     {/* Sidebar - Tickets */}
                     <div className="lg:col-span-1">
-                        <div className="card sticky top-20">
-                            <h2 className="text-2xl font-bold text-gray-900 mb-6">Select Tickets</h2>
+                        <div className="card-glass sticky top-20 animate-slide-in-right">
+                            <h2 className="text-2xl font-bold bg-gradient-to-r from-primary-600 to-secondary-600 bg-clip-text text-transparent mb-6">Select Tickets</h2>
 
                             {event.ticketTypes && event.ticketTypes.length > 0 ? (
                                 <div className="space-y-4">
-                                    {event.ticketTypes.map((ticket) => (
-                                        <div key={ticket.id} className="border border-gray-200 rounded-lg p-4">
-                                            <div className="flex justify-between items-start mb-3">
-                                                <div>
-                                                    <h3 className="font-semibold text-gray-900">{ticket.name}</h3>
-                                                    <p className="text-2xl font-bold text-primary-600">₹{ticket.currentPrice}</p>
-                                                </div>
-                                                <span className="text-sm text-gray-500">
-                                                    {ticket.remainingQuantity} left
-                                                </span>
-                                            </div>
+                                    {event.ticketTypes.map((ticket) => {
+                                        const soldPercentage = getSoldPercentage(ticket);
+                                        const demandInfo = pricingService.getDemandLevel(soldPercentage);
+                                        const showDemandBadge = soldPercentage >= 50;
 
-                                            <div className="flex items-center justify-between">
-                                                <span className="text-sm text-gray-600">Quantity:</span>
-                                                <div className="flex items-center gap-3">
-                                                    <button
-                                                        onClick={() => handleQuantityChange(ticket.id, -1)}
-                                                        disabled={!selectedTickets[ticket.id]}
-                                                        className="w-8 h-8 rounded-full bg-gray-200 hover:bg-gray-300 disabled:opacity-50 flex items-center justify-center"
-                                                    >
-                                                        <Minus className="w-4 h-4" />
-                                                    </button>
-                                                    <span className="w-8 text-center font-semibold">
-                                                        {selectedTickets[ticket.id] || 0}
-                                                    </span>
-                                                    <button
-                                                        onClick={() => handleQuantityChange(ticket.id, 1)}
-                                                        disabled={selectedTickets[ticket.id] >= ticket.remainingQuantity}
-                                                        className="w-8 h-8 rounded-full bg-primary-600 hover:bg-primary-700 text-white disabled:opacity-50 flex items-center justify-center"
-                                                    >
-                                                        <Plus className="w-4 h-4" />
-                                                    </button>
+                                        return (
+                                            <div key={ticket.id} className="border-2 border-gray-200 rounded-xl p-4 bg-white/60 backdrop-blur-sm hover:border-primary-300 transition-all duration-200">
+                                                {/* Demand Badge */}
+                                                {showDemandBadge && (
+                                                    <div className="mb-2">
+                                                        <span className={`badge ${demandInfo.className} text-xs flex items-center gap-1 w-fit`}>
+                                                            <TrendingUp className="w-3 h-3" />
+                                                            {demandInfo.message}
+                                                        </span>
+                                                    </div>
+                                                )}
+
+                                                <div className="flex justify-between items-start mb-3">
+                                                    <div>
+                                                        <h3 className="font-semibold text-gray-900">{ticket.name}</h3>
+                                                        <div className="flex items-center gap-2">
+                                                            <p className="text-2xl font-bold bg-gradient-to-r from-primary-600 to-secondary-600 bg-clip-text text-transparent">
+                                                                ₹{ticket.currentPrice}
+                                                            </p>
+                                                            {soldPercentage >= 75 && (
+                                                                <TrendingUp className="w-4 h-4 text-red-500 animate-pulse-slow" />
+                                                            )}
+                                                        </div>
+                                                    </div>
+                                                    <div className="text-right">
+                                                        <span className="text-sm text-gray-500 block">
+                                                            {ticket.remainingQuantity} left
+                                                        </span>
+                                                        <span className="text-xs text-gray-400">
+                                                            {soldPercentage.toFixed(0)}% sold
+                                                        </span>
+                                                    </div>
+                                                </div>
+
+                                                <div className="flex items-center justify-between">
+                                                    <span className="text-sm text-gray-600">Quantity:</span>
+                                                    <div className="flex items-center gap-3">
+                                                        <button
+                                                            onClick={() => handleQuantityChange(ticket.id, -1)}
+                                                            disabled={!selectedTickets[ticket.id]}
+                                                            className="w-9 h-9 rounded-full bg-gray-200 hover:bg-gray-300 disabled:opacity-50 flex items-center justify-center transition-all hover:scale-110 active:scale-95"
+                                                        >
+                                                            <Minus className="w-4 h-4" />
+                                                        </button>
+                                                        <span className="w-10 text-center font-bold text-lg">
+                                                            {selectedTickets[ticket.id] || 0}
+                                                        </span>
+                                                        <button
+                                                            onClick={() => handleQuantityChange(ticket.id, 1)}
+                                                            disabled={selectedTickets[ticket.id] >= ticket.remainingQuantity}
+                                                            className="w-9 h-9 rounded-full gradient-primary hover:shadow-lg text-white disabled:opacity-50 flex items-center justify-center transition-all hover:scale-110 active:scale-95"
+                                                        >
+                                                            <Plus className="w-4 h-4" />
+                                                        </button>
+                                                    </div>
                                                 </div>
                                             </div>
-                                        </div>
-                                    ))}
+                                        );
+                                    })}
 
                                     {getTotalQuantity() > 0 && (
-                                        <div className="border-t border-gray-200 pt-4 mt-4">
-                                            <div className="flex justify-between items-center mb-4">
-                                                <span className="text-gray-700">Total ({getTotalQuantity()} tickets)</span>
-                                                <span className="text-2xl font-bold text-gray-900">₹{getTotalPrice()}</span>
+                                        <div className="border-t-2 border-gray-200 pt-4 mt-4 animate-slide-up">
+                                            <div className="bg-gradient-to-r from-primary-50 to-secondary-50 rounded-xl p-4 mb-4">
+                                                <div className="flex justify-between items-center">
+                                                    <span className="text-gray-700 font-medium">Total ({getTotalQuantity()} tickets)</span>
+                                                    <span className="text-3xl font-bold bg-gradient-to-r from-primary-600 to-secondary-600 bg-clip-text text-transparent">
+                                                        ₹{getTotalPrice()}
+                                                    </span>
+                                                </div>
                                             </div>
                                             <button
                                                 onClick={handleAddToCart}
-                                                className="w-full btn btn-primary py-3 text-lg"
+                                                className="w-full btn btn-primary py-4 text-lg shadow-lg hover:shadow-xl"
                                             >
                                                 Add to Cart
                                             </button>

@@ -114,7 +114,15 @@ export default function MyTickets() {
                                     {/* QR Code */}
                                     <div className="flex flex-col items-center justify-center">
                                         <div className="bg-white p-4 rounded-lg border-2 border-gray-200">
-                                            <QRCodeSVG value={`TICKET-${ticket.id}`} size={150} />
+                                            {ticket.qrCodeUrl ? (
+                                                <img
+                                                    src={ticket.qrCodeUrl}
+                                                    alt={`QR Code for Ticket ${ticket.id}`}
+                                                    className="w-[150px] h-[150px] object-contain"
+                                                />
+                                            ) : (
+                                                <QRCodeSVG value={`TICKET-${ticket.id}`} size={150} />
+                                            )}
                                         </div>
                                         <button className="btn btn-secondary mt-4 flex items-center gap-2">
                                             <Download className="w-4 h-4" />

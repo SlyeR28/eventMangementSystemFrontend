@@ -1,17 +1,14 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Trash2, Plus, Minus, ShoppingBag, Calendar, MapPin } from 'lucide-react';
+import { Trash2, Plus, Minus, Calendar, MapPin } from 'lucide-react';
 import { format } from 'date-fns';
-import useAuthStore from '../store/authStore';
 import useCartStore from '../store/cartStore';
 import { EmptyCart } from '../components/EmptyStates';
 import ConfirmModal from '../components/ConfirmModal';
 
 export default function Cart() {
     const navigate = useNavigate();
-    const { user } = useAuthStore();
     const { items, totalItems, totalPrice, removeItem, updateQuantity, clearCart } = useCartStore();
-    const [loading, setLoading] = useState(false);
     const [showClearCartModal, setShowClearCartModal] = useState(false);
     const [showRemoveItemModal, setShowRemoveItemModal] = useState(false);
     const [itemToRemove, setItemToRemove] = useState(null);
@@ -178,10 +175,9 @@ export default function Cart() {
 
                             <button
                                 onClick={handleCheckout}
-                                disabled={loading}
                                 className="w-full btn btn-primary py-3 text-lg disabled:opacity-50"
                             >
-                                {loading ? 'Processing...' : 'Proceed to Checkout'}
+                                Proceed to Checkout
                             </button>
 
                             <button

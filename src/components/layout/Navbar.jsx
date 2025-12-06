@@ -4,6 +4,7 @@ import { useState } from 'react';
 import useAuthStore from '../../store/authStore';
 import useCartStore from '../../store/cartStore';
 import ConfirmModal from '../ConfirmModal';
+import { ROLES } from '../../constants/roles';
 
 export default function Navbar() {
     const { isAuthenticated, user, logout } = useAuthStore();
@@ -61,8 +62,13 @@ export default function Navbar() {
 
                                     {/* Dropdown */}
                                     <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg py-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all">
+                                        {user?.role === ROLES.ORGANIZER && (
+                                            <Link to="/organizer/dashboard" className="block px-4 py-2 text-gray-700 hover:bg-gray-100">
+                                                Organizer Dashboard
+                                            </Link>
+                                        )}
                                         <Link to="/dashboard" className="block px-4 py-2 text-gray-700 hover:bg-gray-100">
-                                            Dashboard
+                                            My Tickets
                                         </Link>
                                         <Link to="/profile" className="block px-4 py-2 text-gray-700 hover:bg-gray-100">
                                             Profile

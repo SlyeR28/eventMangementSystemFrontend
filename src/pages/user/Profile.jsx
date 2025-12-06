@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { User, Mail, Lock, Camera } from 'lucide-react';
 import useAuthStore from '../../store/authStore';
 import useToastStore from '../../store/toastStore';
@@ -9,7 +8,6 @@ import userImageService from '../../services/userImageService';
 export default function Profile() {
     const { user, updateUser } = useAuthStore();
     const { addToast } = useToastStore();
-    const navigate = useNavigate();
 
     const [isEditing, setIsEditing] = useState(false);
     const [loading, setLoading] = useState(false);
@@ -39,19 +37,19 @@ export default function Profile() {
     }, [user]);
 
     useEffect(() => {
+        const fetchUserImage = async () => {
+            try {
+                const imageUrl = await userImageService.getUserImage(user.userId);
+                if (imageUrl) setUserImage(imageUrl);
+            } catch {
+                console.error('Failed to fetch user image');
+            }
+        };
+
         if (user?.userId) {
             fetchUserImage();
         }
     }, [user]);
-
-    const fetchUserImage = async () => {
-        try {
-            const imageUrl = await userImageService.getUserImage(user.userId);
-            if (imageUrl) setUserImage(imageUrl);
-        } catch (error) {
-            console.error('Failed to fetch user image', error);
-        }
-    };
 
     const handleImageUpload = async (e) => {
         const file = e.target.files[0];
@@ -75,7 +73,7 @@ export default function Profile() {
                 title: 'Image Updated',
                 message: 'Profile picture updated successfully'
             });
-        } catch (error) {
+        } catch {
             addToast({
                 type: 'error',
                 title: 'Upload Failed',

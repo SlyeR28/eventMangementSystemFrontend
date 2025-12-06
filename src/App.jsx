@@ -1,31 +1,43 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { lazy, Suspense } from 'react';
 import useAuthStore from './store/authStore';
 import Navbar from './components/layout/Navbar';
 import Footer from './components/layout/Footer';
 import ErrorBoundary from './components/ErrorBoundary';
 import Toast from './components/Toast';
+import { ROLES } from './constants/roles';
 
-// Public Pages
-import Home from './pages/Home';
-import Events from './pages/Events';
-import EventDetails from './pages/EventDetails';
-import Cart from './pages/Cart';
-import Checkout from './pages/Checkout';
+// Lazy load all route components for code splitting
+const Home = lazy(() => import('./pages/Home'));
+const Events = lazy(() => import('./pages/Events'));
+const EventDetails = lazy(() => import('./pages/EventDetails'));
+const Categories = lazy(() => import('./pages/Categories'));
+const Cart = lazy(() => import('./pages/Cart'));
+const Checkout = lazy(() => import('./pages/Checkout'));
 
 // Auth Pages
-import Login from './pages/auth/Login';
-import Register from './pages/auth/Register';
+const Login = lazy(() => import('./pages/auth/Login'));
+const Register = lazy(() => import('./pages/auth/Register'));
 
 // User Pages
-import UserDashboard from './pages/user/Dashboard';
-import MyTickets from './pages/user/MyTickets';
-import MyOrders from './pages/user/MyOrders';
-import Profile from './pages/user/Profile';
+const UserDashboard = lazy(() => import('./pages/user/Dashboard'));
+const MyTickets = lazy(() => import('./pages/user/MyTickets'));
+const MyOrders = lazy(() => import('./pages/user/MyOrders'));
+const Profile = lazy(() => import('./pages/user/Profile'));
 
 // Organizer Pages
-import OrganizerDashboard from './pages/organizer/Dashboard';
-import CreateEvent from './pages/organizer/CreateEvent';
-import EditEvent from './pages/organizer/EditEvent';
+const OrganizerDashboard = lazy(() => import('./pages/organizer/Dashboard'));
+const CreateEvent = lazy(() => import('./pages/organizer/CreateEvent'));
+const EditEvent = lazy(() => import('./pages/organizer/EditEvent'));
+
+// Loading fallback component
+function PageLoader() {
+  return (
+    <div className="flex items-center justify-center min-h-screen">
+      <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-primary-600"></div>
+    </div>
+  );
+}
 
 // Protected Route Component
 function ProtectedRoute({ children, requiredRole }) {
@@ -52,98 +64,101 @@ function App() {
           <Navbar />
           <Toast />
           <main className="flex-grow">
-            <Routes>
-              {/* Public Routes */}
-              <Route path="/" element={<Home />} />
-              <Route path="/events" element={<Events />} />
-              <Route path="/events/:id" element={<EventDetails />} />
-              <Route path="/login" element={<Login />} />
-              <Route path="/register" element={<Register />} />
+            <Suspense fallback={<PageLoader />}>
+              <Routes>
+                {/* Public Routes */}
+                <Route path="/" element={<Home />} />
+                <Route path="/events" element={<Events />} />
+                <Route path="/events/:id" element={<EventDetails />} />
+                <Route path="/categories" element={<Categories />} />
+                <Route path="/login" element={<Login />} />
+                <Route path="/register" element={<Register />} />
 
-              {/* Protected Routes - Cart & Checkout */}
-              <Route
-                path="/cart"
-                element={
-                  <ProtectedRoute>
-                    <Cart />
-                  </ProtectedRoute>
-                }
-              />
+                {/* Protected Routes - Cart & Checkout */}
+                <Route
+                  path="/cart"
+                  element={
+                    <ProtectedRoute>
+                      <Cart />
+                    </ProtectedRoute>
+                  }
+                />
 
-              <Route
-                path="/checkout"
-                element={
-                  <ProtectedRoute>
-                    <Checkout />
-                  </ProtectedRoute>
-                }
-              />
+                <Route
+                  path="/checkout"
+                  element={
+                    <ProtectedRoute>
+                      <Checkout />
+                    </ProtectedRoute>
+                  }
+                />
 
-              {/* User Dashboard Routes */}
-              <Route
-                path="/dashboard"
-                element={
-                  <ProtectedRoute>
-                    {user?.role === 'ORGANIZER' ? <Navigate to="/organizer/dashboard" replace /> : <UserDashboard />}
-                  </ProtectedRoute>
-                }
-              />
+                {/* User Dashboard Routes */}
+                <Route
+                  path="/dashboard"
+                  element={
+                    <ProtectedRoute>
+                      {user?.role === ROLES.ORGANIZER ? <Navigate to="/organizer/dashboard" replace /> : <UserDashboard />}
+                    </ProtectedRoute>
+                  }
+                />
 
-              <Route
-                path="/my-tickets"
-                element={
-                  <ProtectedRoute>
-                    <MyTickets />
-                  </ProtectedRoute>
-                }
-              />
+                <Route
+                  path="/my-tickets"
+                  element={
+                    <ProtectedRoute>
+                      <MyTickets />
+                    </ProtectedRoute>
+                  }
+                />
 
-              <Route
-                path="/my-orders"
-                element={
-                  <ProtectedRoute>
-                    <MyOrders />
-                  </ProtectedRoute>
-                }
-              />
+                <Route
+                  path="/my-orders"
+                  element={
+                    <ProtectedRoute>
+                      <MyOrders />
+                    </ProtectedRoute>
+                  }
+                />
 
-              <Route
-                path="/profile"
-                element={
-                  <ProtectedRoute>
-                    <Profile />
-                  </ProtectedRoute>
-                }
-              />
+                <Route
+                  path="/profile"
+                  element={
+                    <ProtectedRoute>
+                      <Profile />
+                    </ProtectedRoute>
+                  }
+                />
 
-              {/* Organizer Dashboard Routes */}
-              <Route
-                path="/organizer/dashboard"
-                element={
-                  <ProtectedRoute requiredRole="ORGANIZER">
-                    <OrganizerDashboard />
-                  </ProtectedRoute>
-                }
-              />
+                {/* Organizer Dashboard Routes */}
+                <Route
+                  path="/organizer/dashboard"
+                  element={
+                    <ProtectedRoute requiredRole={ROLES.ORGANIZER}>
+                      <OrganizerDashboard />
+                    </ProtectedRoute>
+                  }
+                />
 
-              <Route
-                path="/organizer/create-event"
-                element={
-                  <ProtectedRoute requiredRole="ORGANIZER">
-                    <CreateEvent />
-                  </ProtectedRoute>
-                }
-              />
+                <Route
+                  path="/organizer/create-event"
+                  element={
+                    <ProtectedRoute requiredRole={ROLES.ORGANIZER}>
+                      <CreateEvent />
+                    </ProtectedRoute>
+                  }
+                />
 
-              <Route
-                path="/organizer/edit-event/:id"
-                element={
-                  <ProtectedRoute requiredRole="ORGANIZER">
-                    <EditEvent />
-                  </ProtectedRoute>
-                }
-              />
-            </Routes>
+                <Route
+                  path="/organizer/edit-event/:id"
+                  element={
+                    <ProtectedRoute requiredRole={ROLES.ORGANIZER}>
+                      <EditEvent />
+                    </ProtectedRoute>
+                  }
+                />
+              </Routes>
+            </Suspense>
           </main>
           <Footer />
         </div>

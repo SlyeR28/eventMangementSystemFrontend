@@ -24,14 +24,16 @@ export default function Login() {
             const response = await authService.login(data.email, data.password);
             console.log('Login response:', response);
 
-            // Backend returns {email, token, userId} not {user, token}
+            // Backend returns {email, token, userId, role, fullName}
             // Construct user object from response
             const user = {
                 userId: response.userId,
                 email: response.email,
-                name: response.name || response.email.split('@')[0], // Use email prefix if name not provided
+                fullName: response.fullName || response.email.split('@')[0],
+                role: response.role,
             };
 
+            console.log('Setting auth with user:', user);
             setAuth(user, response.token);
             navigate('/');
         } catch (err) {
